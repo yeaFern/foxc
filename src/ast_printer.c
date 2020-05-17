@@ -30,10 +30,18 @@ static void print_expr(expr_t* expr)
 
 		switch(expr->binary_operator)
 		{
-		case BINARY_ADD: { fprintf(state.handle, "+"); break; }
-		case BINARY_SUB: { fprintf(state.handle, "-"); break; }
-		case BINARY_MUL: { fprintf(state.handle, "*"); break; }
-		case BINARY_DIV: { fprintf(state.handle, "/"); break; }
+		case BINARY_ADD:         { fprintf(state.handle, "+" ); break; }
+		case BINARY_SUB:         { fprintf(state.handle, "-" ); break; }
+		case BINARY_MUL:         { fprintf(state.handle, "*" ); break; }
+		case BINARY_DIV:         { fprintf(state.handle, "/" ); break; }
+		case BINARY_LESS:        { fprintf(state.handle, "<" ); break; }
+		case BINARY_LESS_EQ:     { fprintf(state.handle, "<="); break; }
+		case BINARY_GRTR:        { fprintf(state.handle, ">" ); break; }
+		case BINARY_GRTR_EQ:     { fprintf(state.handle, ">="); break; }
+		case BINARY_EQUALS:      { fprintf(state.handle, "=="); break; }
+		case BINARY_NOT_EQ:      { fprintf(state.handle, "!="); break; }
+		case BINARY_LOGICAL_AND: { fprintf(state.handle, "&&"); break; }
+		case BINARY_LOGICAL_OR:  { fprintf(state.handle, "||"); break; }
 		default: UNHANDLED_CASE();
 		}
 

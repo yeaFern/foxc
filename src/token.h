@@ -22,6 +22,14 @@ typedef enum
 	TKN_PLUS,
 	TKN_ASTERIX,
 	TKN_SLASH,
+	TKN_AND,
+	TKN_OR,
+	TKN_EQ_EQ,
+	TKN_NOT_EQ,
+	TKN_LT,
+	TKN_LT_EQ,
+	TKN_GT,
+	TKN_GT_EQ,
 	TKN_EOF
 } token_type_t;
 
@@ -41,7 +49,15 @@ static char* token_type_names[] =
 	"bang",
 	"plus",
 	"asterix",
-	"slash"
+	"slash",
+	"and",
+	"or",
+	"dbl-equals",
+	"not-equals",
+	"less",
+	"less-eq",
+	"greater",
+	"greater-eq",
 	"eof"
 };
 

@@ -195,11 +195,87 @@ token_t* lex(char* source)
 		case ';': emit(TKN_SEMICOLON); next(); continue;
 		case '-': emit(TKN_MINUS    ); next(); continue;
 		case '~': emit(TKN_TILDE    ); next(); continue;
-		case '!': emit(TKN_BANG     ); next(); continue;
 		case '+': emit(TKN_PLUS     ); next(); continue;
 		case '*': emit(TKN_ASTERIX  ); next(); continue;
 		case '/': emit(TKN_SLASH    ); next(); continue;
+
+		// TODO: Better handling of double character tokens.
+		case '&': {
+			next();
+			if(peek() == '&')
+			{
+				next();
+				emit(TKN_AND);
+				continue;
+			}
+		} break;
+		
+		case '|': {
+			next();
+			if(peek() == '|')
+			{
+				next();
+				emit(TKN_OR);
+				continue;
+			}
+		} break;
+		
+		case '=': {
+			next();
+			if(peek() == '=')
+			{
+				next();
+				emit(TKN_EQ_EQ);
+				continue;
+			}
+		} break;
+
+		case '!': {
+			next();
+			if(peek() == '=')
+			{
+				next();
+				emit(TKN_NOT_EQ);
+				continue;
+			}
+			else
+			{
+				emit(TKN_BANG);
+				continue;
+			}
+		} break;
+
+		case '<': {
+			next();
+			if(peek() == '=')
+			{
+				next();
+				emit(TKN_LT_EQ);
+				continue;
+			}
+			else
+			{
+				emit(TKN_LT);
+				continue;
+			}
+		} break;
+		
+		case '>': {
+			next();
+			if(peek() == '=')
+			{
+				next();
+				emit(TKN_GT_EQ);
+				continue;
+			}
+			else
+			{
+				emit(TKN_GT);
+				continue;
+			}
+		} break;
 		}
+
 
 		// If we reach this point of the code, then the given character has not been
 		// processed anywhere above, so we assume that it is an unknown character and

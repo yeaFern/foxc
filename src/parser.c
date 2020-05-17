@@ -93,9 +93,13 @@ static program_t* new_program()
 static expr_t* parse_expr0();
 static expr_t* parse_expr1();
 static expr_t* parse_expr2();
+static expr_t* parse_expr3();
+static expr_t* parse_expr4();
+static expr_t* parse_expr5();
+static expr_t* parse_expr6();
 
 // Parses an expression from the input stream.
-// expr = <"!" | "~" | "-"> <expr> | integer
+// <"!" | "~" | "-"> <expr> | "(" <expr> ")" | integer
 static expr_t* parse_expr0()
 {
 	if(match(TKN_INTEGER))
@@ -135,7 +139,7 @@ static expr_t* parse_expr0()
 	{
 		// Recurse back to the bottom, parsing an new expression from scratch.
 		expect(TKN_L_PAREN);
-		expr_t* expr = parse_expr2();
+		expr_t* expr = parse_expr6();
 		expect(TKN_R_PAREN);
 		return expr;
 	}
@@ -145,9 +149,9 @@ static expr_t* parse_expr0()
 	}
 }
 
+// expr1 = <expr0> { ("*" | "/") <expr0> }
 static expr_t* parse_expr1()
 {
-	// * /
 	expr_t* lhs = parse_expr0();
 	while(match(TKN_ASTERIX)
 	   || match(TKN_SLASH))
@@ -171,16 +175,15 @@ static expr_t* parse_expr1()
 	return lhs;
 }
 
+// expr2 = <expr1> { ("+" | "-") <expr1> }
 static expr_t* parse_expr2()
 {
-	// + -
 	expr_t* lhs = parse_expr1();
 	while(match(TKN_PLUS)
 	   || match(TKN_MINUS))
 	{
 		token_t t = next();
 		expr_t* rhs = parse_expr1();
-
 
 		// Deduce the operator from the token.
 		binary_operator_t operator = BINARY_UNKNOWN;
@@ -198,12 +201,117 @@ static expr_t* parse_expr2()
 	return lhs;
 }
 
+// expr3 = <expr2> { ("<" | "<=" | ">" | ">=") <expr2> }
+static expr_t* parse_expr3()
+{
+	expr_t* lhs = parse_expr2();
+	while(match(TKN_GT)
+	   || match(TKN_GT_EQ)
+	   || match(TKN_LT)
+	   || match(TKN_LT_EQ))
+	{
+		token_t t = next();
+		expr_t* rhs = parse_expr2();
+
+		// Deduce the operator from the token.
+		binary_operator_t operator = BINARY_UNKNOWN;
+		if(t.type == TKN_GT   ) { operator = BINARY_GRTR;    }
+		if(t.type == TKN_GT_EQ) { operator = BINARY_GRTR_EQ; }
+		if(t.type == TKN_LT   ) { operator = BINARY_LESS;    }
+		if(t.type == TKN_LT_EQ) { operator = BINARY_LESS_EQ; }
+
+		if(operator == BINARY_UNKNOWN) { UNHANDLED_CASE(); }
+
+		expr_t* expr = new_expr(EXPR_BINARY);
+		expr->binary_operator = operator;
+		expr->binary_lhs = lhs;
+		expr->binary_rhs = rhs;
+		lhs = expr;
+	}
+	return lhs;
+}
+
+// expr4 = <expr3> { ("!=" | "==") <expr3> }
+static expr_t* parse_expr4()
+{
+	// != ==
+	expr_t* lhs = parse_expr3();
+	while(match(TKN_EQ_EQ)
+	   || match(TKN_NOT_EQ))
+	{
+		token_t t = next();
+		expr_t* rhs = parse_expr3();
+
+		// Deduce the operator from the token.
+		binary_operator_t operator = BINARY_UNKNOWN;
+		if(t.type == TKN_EQ_EQ ) { operator = BINARY_EQUALS; }
+		if(t.type == TKN_NOT_EQ) { operator = BINARY_NOT_EQ; }
+
+		if(operator == BINARY_UNKNOWN) { UNHANDLED_CASE(); }
+
+		expr_t* expr = new_expr(EXPR_BINARY);
+		expr->binary_operator = operator;
+		expr->binary_lhs = lhs;
+		expr->binary_rhs = rhs;
+		lhs = expr;
+	}
+	return lhs;
+}
+
+// expr5 = <expr4> { "&&" <expr4> }
+static expr_t* parse_expr5()
+{
+	expr_t* lhs = parse_expr4();
+	while(match(TKN_AND))
+	{
+		token_t t = next();
+		expr_t* rhs = parse_expr4();
+
+		// Deduce the operator from the token.
+		binary_operator_t operator = BINARY_UNKNOWN;
+		if(t.type == TKN_AND) { operator = BINARY_LOGICAL_AND; }
+
+		if(operator == BINARY_UNKNOWN) { UNHANDLED_CASE(); }
+
+		expr_t* expr = new_expr(EXPR_BINARY);
+		expr->binary_operator = operator;
+		expr->binary_lhs = lhs;
+		expr->binary_rhs = rhs;
+		lhs = expr;
+	}
+	return lhs;
+}
+
+// expr6 = <expr5> { "||" <expr5> }
+static expr_t* parse_expr6()
+{
+	expr_t* lhs = parse_expr5();
+	while(match(TKN_OR))
+	{
+		token_t t = next();
+		expr_t* rhs = parse_expr5();
+
+		// Deduce the operator from the token.
+		binary_operator_t operator = BINARY_UNKNOWN;
+		if(t.type == TKN_OR) { operator = BINARY_LOGICAL_OR; }
+
+		if(operator == BINARY_UNKNOWN) { UNHANDLED_CASE(); }
+
+		expr_t* expr = new_expr(EXPR_BINARY);
+		expr->binary_operator = operator;
+		expr->binary_lhs = lhs;
+		expr->binary_rhs = rhs;
+		lhs = expr;
+	}
+	return lhs;
+}
+
 // Parses a statement from the input stream.
 // stmt = "return" <expr> ";"
 static stmt_t* parse_statement()
 {
 	expect(TKN_RETURN);
-	expr_t* expr = parse_expr2();
+	expr_t* expr = parse_expr6();
 	expect(TKN_SEMICOLON);
 
 	// For now, the only type of statement we support is return statements.
@@ -270,5 +378,5 @@ expr_t* parse_expression(token_t* tokens)
 	state.tokens = tokens;
 	state.ptr = 0;
 
-	return parse_expr2();
+	return parse_expr6();
 }

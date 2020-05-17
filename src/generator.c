@@ -3,7 +3,21 @@
 static struct
 {
 	FILE* handle;
+	int label_counter;
 } state;
+
+static char* new_label()
+{
+	char* buffer = malloc(64);
+	snprintf(buffer, 63, "_label%d", state.label_counter);
+	state.label_counter++;
+	return buffer;
+}
+
+static void free_label(char* label)
+{
+	free(label);
+}
 
 static void generate_expr(expr_t* expr);
 
@@ -56,12 +70,103 @@ static void generate_binary_expr(expr_t* expr)
 		fprintf(state.handle, "\tpop %%rcx\n");
 		fprintf(state.handle, "\timul %%ecx, %%eax\n");
 	} break;
+	case BINARY_LESS: {
+		generate_expr(expr->binary_lhs);
+		fprintf(state.handle, "\tpush %%rax\n");
+		generate_expr(expr->binary_rhs);
+		fprintf(state.handle, "\tpop %%rcx\n");
+		fprintf(state.handle, "\tcmpl %%eax, %%ecx\n");
+		fprintf(state.handle, "\tmovl $0, %%eax\n");
+		fprintf(state.handle, "\tsetl %%al\n");
+	} break;
+	case BINARY_LESS_EQ: {
+		generate_expr(expr->binary_lhs);
+		fprintf(state.handle, "\tpush %%rax\n");
+		generate_expr(expr->binary_rhs);
+		fprintf(state.handle, "\tpop %%rcx\n");
+		fprintf(state.handle, "\tcmpl %%eax, %%ecx\n");
+		fprintf(state.handle, "\tmovl $0, %%eax\n");
+		fprintf(state.handle, "\tsetle %%al\n");
+	} break;
+	case BINARY_GRTR: {
+		generate_expr(expr->binary_lhs);
+		fprintf(state.handle, "\tpush %%rax\n");
+		generate_expr(expr->binary_rhs);
+		fprintf(state.handle, "\tpop %%rcx\n");
+		fprintf(state.handle, "\tcmpl %%eax, %%ecx\n");
+		fprintf(state.handle, "\tmovl $0, %%eax\n");
+		fprintf(state.handle, "\tsetg %%al\n");
+	} break;
+	case BINARY_GRTR_EQ: {
+		generate_expr(expr->binary_lhs);
+		fprintf(state.handle, "\tpush %%rax\n");
+		generate_expr(expr->binary_rhs);
+		fprintf(state.handle, "\tpop %%rcx\n");
+		fprintf(state.handle, "\tcmpl %%eax, %%ecx\n");
+		fprintf(state.handle, "\tmovl $0, %%eax\n");
+		fprintf(state.handle, "\tsetge %%al\n");
+	} break;
 	case BINARY_DIV: {
 		generate_expr(expr->binary_rhs);
 		fprintf(state.handle, "\tmovl %%eax, %%ebx\n");
 		generate_expr(expr->binary_lhs);
 		fprintf(state.handle, "\txor %%edx, %%edx\n");
 		fprintf(state.handle, "\tidivl %%ebx\n");
+	} break;
+	case BINARY_EQUALS: {
+		generate_expr(expr->binary_lhs);
+		fprintf(state.handle, "\tpush %%rax\n");
+		generate_expr(expr->binary_rhs);
+		fprintf(state.handle, "\tpop %%rcx\n");
+		fprintf(state.handle, "\tcmpl %%eax, %%ecx\n");
+		fprintf(state.handle, "\tmovl $0, %%eax\n");
+		fprintf(state.handle, "\tsete %%al\n");
+	} break;
+	case BINARY_NOT_EQ: {
+		generate_expr(expr->binary_lhs);
+		fprintf(state.handle, "\tpush %%rax\n");
+		generate_expr(expr->binary_rhs);
+		fprintf(state.handle, "\tpop %%rcx\n");
+		fprintf(state.handle, "\tcmpl %%eax, %%ecx\n");
+		fprintf(state.handle, "\tmovl $0, %%eax\n");
+		fprintf(state.handle, "\tsetne %%al\n");
+	} break;
+	case BINARY_LOGICAL_AND: {
+		char* l1 = new_label();
+		char* l2 = new_label();
+
+		generate_expr(expr->binary_lhs);
+		fprintf(state.handle, "\tcmpl $0, %%eax\n");
+		fprintf(state.handle, "\tjne %s\n", l1);
+		fprintf(state.handle, "\tjmp %s\n", l2);
+		fprintf(state.handle, "%s:\n", l1);
+		generate_expr(expr->binary_rhs);
+		fprintf(state.handle, "\tcmpl $0, %%eax\n");
+		fprintf(state.handle, "\tmovl $0, %%eax\n");
+		fprintf(state.handle, "\tsetne %%al\n");
+		fprintf(state.handle, "%s:\n", l2);
+
+		free_label(l1);
+		free_label(l2);
+	} break;
+	case BINARY_LOGICAL_OR: {
+		char* l1 = new_label();
+		char* l2 = new_label();
+
+		generate_expr(expr->binary_lhs);
+		fprintf(state.handle, "\tcmpl $0, %%eax\n");
+		fprintf(state.handle, "\tje %s\n", l1);
+		fprintf(state.handle, "\tmovl $1, %%eax\n");
+		fprintf(state.handle, "\tjmp %s\n", l2);
+		fprintf(state.handle, "%s:\n", l1);
+		generate_expr(expr->binary_rhs);
+		fprintf(state.handle, "\tcmpl $0, %%eax\n");
+		fprintf(state.handle, "\tmovl $0, %%eax\n");
+		fprintf(state.handle, "\tsetne %%al\n");
+		fprintf(state.handle, "%s:\n", l2);
+
+		free_label(l1);
+		free_label(l2);
 	} break;
 	default: {
 		UNHANDLED_CASE();
@@ -107,8 +212,8 @@ static void generate_decl(decl_t* decl)
 	switch(decl->type)
 	{
 	case DECL_FUNC: {
-		fprintf(state.handle, ".globl _%s\n", decl->name);
-		fprintf(state.handle, "_%s:\n", decl->name);
+		fprintf(state.handle, ".globl %s\n", decl->name);
+		fprintf(state.handle, "%s:\n", decl->name);
 		generate_stmt(decl->stmt);
 	} break;
 	default: {
@@ -125,6 +230,7 @@ static void generate_program(program_t* program)
 void generate(FILE* handle, program_t* program)
 {
 	state.handle = handle;
+	state.label_counter = 0;
 
 	generate_program(program);
 }
