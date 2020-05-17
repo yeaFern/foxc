@@ -5,7 +5,6 @@ static struct
 	FILE* handle;
 } state;
 
-
 static void print_expr(expr_t* expr)
 {
 	switch(expr->type)

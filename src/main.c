@@ -5,6 +5,7 @@
 #include "parser.h"
 
 #include "ast_printer.h"
+#include "generator.h"
 
 char* read_file(char* path)
 {
@@ -30,8 +31,8 @@ int main(int argc, char** argv)
 		token_t* tokens = lex(source);
 		program_t* program = parse(tokens);
 
-		FILE* f = fopen("out.c", "wb");
-		print_ast(f, program);
+		FILE* f = fopen("out.s", "wb");
+		generate(f, program);
 		fclose(f);
 
 		free(source);
