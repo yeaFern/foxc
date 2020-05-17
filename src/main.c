@@ -2,6 +2,9 @@
 #include <stdlib.h>
 
 #include "lex.h"
+#include "parser.h"
+
+#include "ast_printer.h"
 
 char* read_file(char* path)
 {
@@ -25,11 +28,9 @@ int main(int argc, char** argv)
 	{
 		char* source= read_file(argv[1]);
 		token_t* tokens = lex(source);
+		program_t* program = parse(tokens);
 
-		for(int i = 0; i < sb_count(tokens); i++)
-		{
-			printf("%s\n", token_type_names[tokens[i].type]);
-		}
+		print_ast(program);
 	}
 	else
 	{
