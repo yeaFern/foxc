@@ -1,6 +1,6 @@
 #include "error.h"
 
-void error(char* fmt, ...)
+_Noreturn void error(char* fmt, ...)
 {
 	va_list args;
 	va_start(args, fmt);

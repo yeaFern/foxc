@@ -4,9 +4,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <stdnoreturn.h>
 
 // Fatally exits the program with the given error message.
 // NOTE: This function calls exit() and as such, does not return.
-void error(char* fmt, ...);
+_Noreturn void error(char* fmt, ...);
 
 #endif
