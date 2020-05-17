@@ -32,7 +32,7 @@ static void generate_decl(decl_t* decl)
 	{
 	case DECL_FUNC: {
 		fprintf(state.handle, ".globl _%s\n", decl->name);
-        fprintf(state.handle, "_%s:\n", decl->name);
+		fprintf(state.handle, "_%s:\n", decl->name);
 		generate_stmt(decl->stmt);
 	} break;
 	}
@@ -45,7 +45,7 @@ static void generate_program(program_t* program)
 
 void generate(FILE* handle, program_t* program)
 {
-    state.handle = handle;
+	state.handle = handle;
 
-    generate_program(program);
+	generate_program(program);
 }

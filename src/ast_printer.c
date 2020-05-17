@@ -48,5 +48,5 @@ void print_ast(FILE* handle, program_t* program)
 {
 	state.handle = handle;
 
-    print_program(program);
+	print_program(program);
 }
