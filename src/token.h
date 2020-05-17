@@ -30,6 +30,7 @@ typedef enum
 	TKN_LT_EQ,
 	TKN_GT,
 	TKN_GT_EQ,
+	TKN_MODULO,
 	TKN_EOF
 } token_type_t;
 

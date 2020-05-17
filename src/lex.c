@@ -198,6 +198,7 @@ token_t* lex(char* source)
 		case '+': emit(TKN_PLUS     ); next(); continue;
 		case '*': emit(TKN_ASTERIX  ); next(); continue;
 		case '/': emit(TKN_SLASH    ); next(); continue;
+		case '%': emit(TKN_MODULO   ); next(); continue;
 
 		// TODO: Better handling of double character tokens.
 		case '&': {

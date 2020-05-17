@@ -168,6 +168,14 @@ static void generate_binary_expr(expr_t* expr)
 		free_label(l1);
 		free_label(l2);
 	} break;
+	case BINARY_MODULO: {
+		generate_expr(expr->binary_rhs);
+		fprintf(state.handle, "\tmovl %%eax, %%ebx\n");
+		generate_expr(expr->binary_lhs);
+		fprintf(state.handle, "\txor %%edx, %%edx\n");
+		fprintf(state.handle, "\tidivl %%ebx\n");
+		fprintf(state.handle, "\tmovl %%edx, %%eax\n");
+	} break;
 	default: {
 		UNHANDLED_CASE();
 	} break;

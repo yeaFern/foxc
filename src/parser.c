@@ -149,20 +149,22 @@ static expr_t* parse_expr0()
 	}
 }
 
-// expr1 = <expr0> { ("*" | "/") <expr0> }
+// expr1 = <expr0> { ("*" | "/" | "%") <expr0> }
 static expr_t* parse_expr1()
 {
 	expr_t* lhs = parse_expr0();
 	while(match(TKN_ASTERIX)
-	   || match(TKN_SLASH))
+	   || match(TKN_SLASH)
+	   || match(TKN_MODULO))
 	{
 		token_t t = next();
 		expr_t* rhs = parse_expr0();
 
 		// Deduce the operator from the token.
 		binary_operator_t operator = BINARY_UNKNOWN;
-		if(t.type == TKN_ASTERIX) { operator = BINARY_MUL; }
-		if(t.type == TKN_SLASH  ) { operator = BINARY_DIV; }
+		if(t.type == TKN_ASTERIX) { operator = BINARY_MUL;    }
+		if(t.type == TKN_SLASH  ) { operator = BINARY_DIV;    }
+		if(t.type == TKN_MODULO ) { operator = BINARY_MODULO; }
 
 		if(operator == BINARY_UNKNOWN) { UNHANDLED_CASE(); }
 

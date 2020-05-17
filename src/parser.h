@@ -37,7 +37,8 @@ typedef enum
 	BINARY_EQUALS,
 	BINARY_NOT_EQ,
 	BINARY_LOGICAL_AND,
-	BINARY_LOGICAL_OR
+	BINARY_LOGICAL_OR,
+	BINARY_MODULO
 } binary_operator_t;
 
 typedef struct expr_t

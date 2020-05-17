@@ -42,6 +42,7 @@ static void print_expr(expr_t* expr)
 		case BINARY_NOT_EQ:      { fprintf(state.handle, "!="); break; }
 		case BINARY_LOGICAL_AND: { fprintf(state.handle, "&&"); break; }
 		case BINARY_LOGICAL_OR:  { fprintf(state.handle, "||"); break; }
+		case BINARY_MODULO:      { fprintf(state.handle, "%%"); break; }
 		default: UNHANDLED_CASE();
 		}
 
