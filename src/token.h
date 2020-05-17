@@ -16,6 +16,9 @@ typedef enum
 	TKN_SEMICOLON,
 	TKN_RETURN,
 	TKN_IDENT,
+	TKN_MINUS,
+	TKN_TILDE,
+	TKN_BANG,
 	TKN_EOF
 } token_type_t;
 
@@ -30,6 +33,9 @@ static char* token_type_names[] =
 	"semi colon",
 	"return",
 	"identifier",
+	"minus",
+	"tilde",
+	"bang",
 	"eof"
 };
 

@@ -12,6 +12,20 @@ static void print_expr(expr_t* expr)
 	case EXPR_LITERAL: {
 		fprintf(state.handle, "%ld", expr->value);
 	} break;
+	case EXPR_UNARY: {
+		switch(expr->unary_operator)
+		{
+		case UNARY_NEGATE:             { fprintf(state.handle, "-"); break; }
+		case UNARY_BITWISE_COMPLEMENT: { fprintf(state.handle, "~"); break; }
+		case UNARY_LOGICAL_NEGATE:     { fprintf(state.handle, "!"); break; }
+		default: UNHANDLED_CASE();
+		};
+
+		print_expr(expr->unary_operand);
+	} break;
+	default: {
+		UNHANDLED_CASE();
+	} break;
 	}
 }
 
@@ -24,6 +38,9 @@ static void print_stmt(stmt_t* stmt)
 		print_expr(stmt->expr);
 		fprintf(state.handle, ";\n");
 	} break;
+	default: {
+		UNHANDLED_CASE();
+	} break;
 	}
 }
 
@@ -35,6 +52,9 @@ static void print_decl(decl_t* decl)
 		fprintf(state.handle, "int %s () {\n", decl->name);
 		print_stmt(decl->stmt);
 		fprintf(state.handle, "}\n");
+	} break;
+	default: {
+		UNHANDLED_CASE();
 	} break;
 	}
 }

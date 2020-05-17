@@ -193,6 +193,9 @@ token_t* lex(char* source)
 		case '(': emit(TKN_L_PAREN  ); next(); continue;
 		case ')': emit(TKN_R_PAREN  ); next(); continue;
 		case ';': emit(TKN_SEMICOLON); next(); continue;
+		case '-': emit(TKN_MINUS    ); next(); continue;
+		case '~': emit(TKN_TILDE    ); next(); continue;
+		case '!': emit(TKN_BANG     ); next(); continue;
 		}
 
 		// If we reach this point of the code, then the given character has not been

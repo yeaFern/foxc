@@ -84,17 +84,43 @@ static program_t* new_program()
 //
 
 // Parses an expression from the input stream.
-// expr = integer
+// expr = <"!" | "~" | "-"> <expr> | integer
 static expr_t* parse_expression()
 {
-	token_t t = expect(TKN_INTEGER);
+	token_t t = next();
 
-	// For now, the only type of expression we support is an integer literal.
-	// In the future we will support binary/unary expressions too.
-	expr_t* expr = new_expr(EXPR_LITERAL);
-	expr->value = t.val_integer;
+	if(t.type == TKN_INTEGER)
+	{
+		// If we got an integer, return a constant node.
+		expr_t* expr = new_expr(EXPR_LITERAL);
+		expr->value = t.val_integer;
+		return expr;
+	}
+	else if(t.type == TKN_MINUS || t.type == TKN_TILDE || t.type == TKN_BANG)
+	{
+		// If we got a unary operator, parse it.
 
-	return expr;
+		// Deduce the operator from the token.
+		unary_operator_t operator = UNARY_UNKNOWN;
+		if(t.type == TKN_MINUS) { operator = UNARY_NEGATE;             }
+		if(t.type == TKN_TILDE) { operator = UNARY_BITWISE_COMPLEMENT; }
+		if(t.type == TKN_BANG ) { operator = UNARY_LOGICAL_NEGATE;     }
+
+		if(operator == UNARY_UNKNOWN) { UNHANDLED_CASE(); }
+
+		// Recursively parse the operand.
+		expr_t* operand = parse_expression();
+
+		// Construct the unary expression.
+		expr_t* expr = new_expr(EXPR_UNARY);
+		expr->unary_operator = operator;
+		expr->unary_operand = operand;
+		return expr;
+	}
+	else
+	{
+		error("expected an expression\n");
+	}
 }
 
 // Parses a statement from the input stream.

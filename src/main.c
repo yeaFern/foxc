@@ -31,6 +31,8 @@ int main(int argc, char** argv)
 		token_t* tokens = lex(source);
 		program_t* program = parse(tokens);
 
+		print_ast(stdout, program);
+
 		FILE* f = fopen("out.s", "wb");
 		generate(f, program);
 		fclose(f);

@@ -10,10 +10,19 @@
 
 typedef enum
 {
-	EXPR_LITERAL
+	EXPR_LITERAL,
+	EXPR_UNARY
 } expr_type_t;
 
-typedef struct
+typedef enum
+{
+	UNARY_UNKNOWN,
+	UNARY_NEGATE,
+	UNARY_BITWISE_COMPLEMENT,
+	UNARY_LOGICAL_NEGATE
+} unary_operator_t;
+
+typedef struct expr_t
 {
 	expr_type_t type;
 
@@ -22,6 +31,11 @@ typedef struct
 		struct
 		{ // EXPR_LITERAL
 			uint64_t value;
+		};
+		struct
+		{ // EXPR_UNARY
+			unary_operator_t unary_operator;
+			struct expr_t* unary_operand;
 		};
 	};
 } expr_t;
