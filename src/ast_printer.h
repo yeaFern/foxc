@@ -5,7 +5,7 @@
 
 #include "parser.h"
 
-// Prints the given AST to the console.
-void print_ast(program_t* program);
+// Prints the given AST to the given file handle.
+void print_ast(FILE* handle, program_t* program);
 
 #endif

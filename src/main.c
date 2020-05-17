@@ -30,7 +30,9 @@ int main(int argc, char** argv)
 		token_t* tokens = lex(source);
 		program_t* program = parse(tokens);
 
-		print_ast(program);
+		FILE* f = fopen("out.c", "wb");
+		print_ast(f, program);
+		fclose(f);
 	}
 	else
 	{

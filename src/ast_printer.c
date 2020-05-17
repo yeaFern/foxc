@@ -1,11 +1,17 @@
 #include "ast_printer.h"
 
+static struct
+{
+	FILE* handle;
+} state;
+
+
 static void print_expr(expr_t* expr)
 {
 	switch(expr->type)
 	{
 	case EXPR_LITERAL: {
-		printf("%ld", expr->value);
+		fprintf(state.handle, "%ld", expr->value);
 	} break;
 	}
 }
@@ -15,9 +21,9 @@ static void print_stmt(stmt_t* stmt)
 	switch(stmt->type)
 	{
 	case STMT_RETURN: {
-		printf("return ");
+		fprintf(state.handle, "return ");
 		print_expr(stmt->expr);
-		printf(";\n");
+		fprintf(state.handle, ";\n");
 	} break;
 	}
 }
@@ -27,9 +33,9 @@ static void print_decl(decl_t* decl)
 	switch(decl->type)
 	{
 	case DECL_FUNC: {
-		printf("int %s () {\n", decl->name);
+		fprintf(state.handle, "int %s () {\n", decl->name);
 		print_stmt(decl->stmt);
-		printf("}\n");
+		fprintf(state.handle, "}\n");
 	} break;
 	}
 }
@@ -39,7 +45,9 @@ static void print_program(program_t* program)
 	print_decl(program->decl);
 }
 
-void print_ast(program_t* program)
+void print_ast(FILE* handle, program_t* program)
 {
+	state.handle = handle;
+
     print_program(program);
 }
