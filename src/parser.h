@@ -11,7 +11,8 @@
 typedef enum
 {
 	EXPR_LITERAL,
-	EXPR_UNARY
+	EXPR_UNARY,
+	EXPR_BINARY
 } expr_type_t;
 
 typedef enum
@@ -21,6 +22,15 @@ typedef enum
 	UNARY_BITWISE_COMPLEMENT,
 	UNARY_LOGICAL_NEGATE
 } unary_operator_t;
+
+typedef enum
+{
+	BINARY_UNKNOWN,
+	BINARY_ADD,
+	BINARY_SUB,
+	BINARY_MUL,
+	BINARY_DIV
+} binary_operator_t;
 
 typedef struct expr_t
 {
@@ -36,6 +46,12 @@ typedef struct expr_t
 		{ // EXPR_UNARY
 			unary_operator_t unary_operator;
 			struct expr_t* unary_operand;
+		};
+		struct
+		{ // EXPR_BINARY
+			binary_operator_t binary_operator;
+			struct expr_t* binary_lhs;
+			struct expr_t* binary_rhs;
 		};
 	};
 } expr_t;
@@ -86,5 +102,8 @@ typedef struct
 // If the parser encounters an error, the program will terminate and an
 // error message will be printed to the user.
 program_t* parse(token_t* tokens);
+
+// Parses a single expression from given token list.
+expr_t* parse_expression(token_t* tokens);
 
 #endif

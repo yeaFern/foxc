@@ -25,6 +25,20 @@ char* read_file(char* path)
 
 int main(int argc, char** argv)
 {
+	if(argc == 1)
+	{
+		while(true)
+		{
+			printf("> ");
+
+			char source[256];
+			gets(source);
+			token_t* tokens = lex(source);
+			expr_t* expression = parse_expression(tokens);
+
+			print_expression(stdout, expression);
+		}
+	}
 	if(argc == 2)
 	{
 		char* source = read_file(argv[1]);

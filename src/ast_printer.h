@@ -9,4 +9,7 @@
 // Prints the given AST to the given file handle.
 void print_ast(FILE* handle, program_t* program);
 
+// Prints a single expression.
+void print_expression(FILE* handle, expr_t* expression);
+
 #endif

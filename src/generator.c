@@ -31,6 +31,44 @@ static void generate_unary_expr(expr_t* expr)
 	}
 }
 
+static void generate_binary_expr(expr_t* expr)
+{
+	switch(expr->binary_operator)
+	{
+	case BINARY_ADD: {
+		generate_expr(expr->binary_lhs);
+		fprintf(state.handle, "\tpush %%rax\n");
+		generate_expr(expr->binary_rhs);
+		fprintf(state.handle, "\tpop %%rcx\n");
+		fprintf(state.handle, "\taddl %%ecx, %%eax\n");
+	} break;
+	case BINARY_SUB: {
+		generate_expr(expr->binary_rhs);
+		fprintf(state.handle, "\tpush %%rax\n");
+		generate_expr(expr->binary_lhs);
+		fprintf(state.handle, "\tpop %%rcx\n");
+		fprintf(state.handle, "\tsubl %%ecx, %%eax\n");
+	} break;
+	case BINARY_MUL: {
+		generate_expr(expr->binary_lhs);
+		fprintf(state.handle, "\tpush %%rax\n");
+		generate_expr(expr->binary_rhs);
+		fprintf(state.handle, "\tpop %%rcx\n");
+		fprintf(state.handle, "\timul %%ecx, %%eax\n");
+	} break;
+	case BINARY_DIV: {
+		generate_expr(expr->binary_rhs);
+		fprintf(state.handle, "\tmovl %%eax, %%ebx\n");
+		generate_expr(expr->binary_lhs);
+		fprintf(state.handle, "\txor %%edx, %%edx\n");
+		fprintf(state.handle, "\tidivl %%ebx\n");
+	} break;
+	default: {
+		UNHANDLED_CASE();
+	} break;
+	}
+}
+
 static void generate_expr(expr_t* expr)
 {
 	switch(expr->type)
@@ -40,6 +78,9 @@ static void generate_expr(expr_t* expr)
 	} break;
 	case EXPR_UNARY: {
 		generate_unary_expr(expr);
+	} break;
+	case EXPR_BINARY: {
+		generate_binary_expr(expr);
 	} break;
 	default: {
 		UNHANDLED_CASE();

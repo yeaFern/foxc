@@ -23,6 +23,24 @@ static void print_expr(expr_t* expr)
 
 		print_expr(expr->unary_operand);
 	} break;
+	case EXPR_BINARY: {
+		fprintf(state.handle, "(");
+		print_expr(expr->binary_lhs);
+		fprintf(state.handle, " ");
+
+		switch(expr->binary_operator)
+		{
+		case BINARY_ADD: { fprintf(state.handle, "+"); break; }
+		case BINARY_SUB: { fprintf(state.handle, "-"); break; }
+		case BINARY_MUL: { fprintf(state.handle, "*"); break; }
+		case BINARY_DIV: { fprintf(state.handle, "/"); break; }
+		default: UNHANDLED_CASE();
+		}
+
+		fprintf(state.handle, " ");
+		print_expr(expr->binary_rhs);
+		fprintf(state.handle, ")");
+	} break;
 	default: {
 		UNHANDLED_CASE();
 	} break;
@@ -69,4 +87,13 @@ void print_ast(FILE* handle, program_t* program)
 	state.handle = handle;
 
 	print_program(program);
+	fprintf(state.handle, "\n");
+}
+
+void print_expression(FILE* handle, expr_t* expression)
+{
+	state.handle = handle;
+
+	print_expr(expression);
+	fprintf(state.handle, "\n");
 }

@@ -19,6 +19,9 @@ typedef enum
 	TKN_MINUS,
 	TKN_TILDE,
 	TKN_BANG,
+	TKN_PLUS,
+	TKN_ASTERIX,
+	TKN_SLASH,
 	TKN_EOF
 } token_type_t;
 
@@ -36,6 +39,9 @@ static char* token_type_names[] =
 	"minus",
 	"tilde",
 	"bang",
+	"plus",
+	"asterix",
+	"slash"
 	"eof"
 };
 

@@ -24,11 +24,18 @@ static token_t peek()
 	return state.tokens[state.ptr];
 }
 
-// Returns the next token in the input stream, incremenets the internal pointer
+// Returns the next token in the input stream, increments the internal pointer
 // to point to the next token.
 static token_t next()
 {
 	return state.tokens[state.ptr++];
+}
+
+// Returns true if the next token in the stream is of the specified type, false
+// otherwise. Does not increment the internal pointer.
+static bool match(token_type_t type)
+{
+	return peek().type == type;
 }
 
 // Returns the next token in the stream if that token matches the specified
@@ -83,22 +90,29 @@ static program_t* new_program()
 // Parser body.
 //
 
+static expr_t* parse_expr0();
+static expr_t* parse_expr1();
+static expr_t* parse_expr2();
+
 // Parses an expression from the input stream.
 // expr = <"!" | "~" | "-"> <expr> | integer
-static expr_t* parse_expression()
+static expr_t* parse_expr0()
 {
-	token_t t = next();
-
-	if(t.type == TKN_INTEGER)
+	if(match(TKN_INTEGER))
 	{
 		// If we got an integer, return a constant node.
+		token_t t = next();
+
 		expr_t* expr = new_expr(EXPR_LITERAL);
 		expr->value = t.val_integer;
 		return expr;
 	}
-	else if(t.type == TKN_MINUS || t.type == TKN_TILDE || t.type == TKN_BANG)
+	else if(match(TKN_MINUS)
+		 || match(TKN_TILDE)
+		 || match(TKN_BANG))
 	{
 		// If we got a unary operator, parse it.
+		token_t t = next();
 
 		// Deduce the operator from the token.
 		unary_operator_t operator = UNARY_UNKNOWN;
@@ -109,12 +123,20 @@ static expr_t* parse_expression()
 		if(operator == UNARY_UNKNOWN) { UNHANDLED_CASE(); }
 
 		// Recursively parse the operand.
-		expr_t* operand = parse_expression();
+		expr_t* operand = parse_expr0();
 
 		// Construct the unary expression.
 		expr_t* expr = new_expr(EXPR_UNARY);
 		expr->unary_operator = operator;
 		expr->unary_operand = operand;
+		return expr;
+	}
+	else if(match(TKN_L_PAREN))
+	{
+		// Recurse back to the bottom, parsing an new expression from scratch.
+		expect(TKN_L_PAREN);
+		expr_t* expr = parse_expr2();
+		expect(TKN_R_PAREN);
 		return expr;
 	}
 	else
@@ -123,12 +145,65 @@ static expr_t* parse_expression()
 	}
 }
 
+static expr_t* parse_expr1()
+{
+	// * /
+	expr_t* lhs = parse_expr0();
+	while(match(TKN_ASTERIX)
+	   || match(TKN_SLASH))
+	{
+		token_t t = next();
+		expr_t* rhs = parse_expr0();
+
+		// Deduce the operator from the token.
+		binary_operator_t operator = BINARY_UNKNOWN;
+		if(t.type == TKN_ASTERIX) { operator = BINARY_MUL; }
+		if(t.type == TKN_SLASH  ) { operator = BINARY_DIV; }
+
+		if(operator == BINARY_UNKNOWN) { UNHANDLED_CASE(); }
+
+		expr_t* expr = new_expr(EXPR_BINARY);
+		expr->binary_operator = operator;
+		expr->binary_lhs = lhs;
+		expr->binary_rhs = rhs;
+		lhs = expr;
+	}
+	return lhs;
+}
+
+static expr_t* parse_expr2()
+{
+	// + -
+	expr_t* lhs = parse_expr1();
+	while(match(TKN_PLUS)
+	   || match(TKN_MINUS))
+	{
+		token_t t = next();
+		expr_t* rhs = parse_expr1();
+
+
+		// Deduce the operator from the token.
+		binary_operator_t operator = BINARY_UNKNOWN;
+		if(t.type == TKN_PLUS ) { operator = BINARY_ADD; }
+		if(t.type == TKN_MINUS) { operator = BINARY_SUB; }
+
+		if(operator == BINARY_UNKNOWN) { UNHANDLED_CASE(); }
+
+		expr_t* expr = new_expr(EXPR_BINARY);
+		expr->binary_operator = operator;
+		expr->binary_lhs = lhs;
+		expr->binary_rhs = rhs;
+		lhs = expr;
+	}
+	return lhs;
+}
+
 // Parses a statement from the input stream.
 // stmt = "return" <expr> ";"
 static stmt_t* parse_statement()
 {
 	expect(TKN_RETURN);
-	expr_t* expr = parse_expression();
+	expr_t* expr = parse_expr2();
 	expect(TKN_SEMICOLON);
 
 	// For now, the only type of statement we support is return statements.
@@ -188,4 +263,12 @@ program_t* parse(token_t* tokens)
 	state.ptr = 0;
 
 	return parse_program();
+}
+
+expr_t* parse_expression(token_t* tokens)
+{
+	state.tokens = tokens;
+	state.ptr = 0;
+
+	return parse_expr2();
 }
