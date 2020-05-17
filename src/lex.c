@@ -26,11 +26,18 @@ static bool is_numeric(char c)
 	return c >= '0' && c <= '9';
 }
 
+// Returns true if the given character can be the first character in an identifier
+// name, false otherwise.
+static bool is_ident_start_char(char c)
+{
+	return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c == '_');
+}
+
 // Returns true if the given character can appear in an identifier name,
 // false otherwise.
 static bool is_ident_char(char c)
 {
-	return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
+	return is_ident_start_char(c) || is_numeric(c);
 }
 
 //
@@ -166,7 +173,7 @@ token_t* lex(char* source)
 		}
 
 		// We found an identifier, parse it.
-		if(is_ident_char(c))
+		if(is_ident_start_char(c))
 		{
 			str_t ident = parse_identifier();
 
