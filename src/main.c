@@ -26,13 +26,15 @@ int main(int argc, char** argv)
 {
 	if(argc == 2)
 	{
-		char* source= read_file(argv[1]);
+		char* source = read_file(argv[1]);
 		token_t* tokens = lex(source);
 		program_t* program = parse(tokens);
 
 		FILE* f = fopen("out.c", "wb");
 		print_ast(f, program);
 		fclose(f);
+
+		free(source);
 	}
 	else
 	{
