@@ -199,6 +199,7 @@ token_t* lex(char* source)
 		case '*': emit(TKN_ASTERIX  ); next(); continue;
 		case '/': emit(TKN_SLASH    ); next(); continue;
 		case '%': emit(TKN_MODULO   ); next(); continue;
+		case '^': emit(TKN_CARET    ); next(); continue;
 
 		// TODO: Better handling of double character tokens.
 		case '&': {
@@ -209,6 +210,11 @@ token_t* lex(char* source)
 				emit(TKN_AMP_AMP);
 				continue;
 			}
+			else
+			{
+				emit(TKN_AMP);
+				continue;
+			}
 		} break;
 		
 		case '|': {
@@ -216,7 +222,12 @@ token_t* lex(char* source)
 			if(peek() == '|')
 			{
 				next();
-				emit(TKN_OR);
+				emit(TKN_PIPE_PIPE);
+				continue;
+			}
+			else
+			{
+				emit(TKN_PIPE);
 				continue;
 			}
 		} break;
@@ -254,6 +265,12 @@ token_t* lex(char* source)
 				emit(TKN_LT_EQ);
 				continue;
 			}
+			else if(peek() == '<')
+			{
+				next();
+				emit(TKN_LT_LT);
+				continue;
+			}
 			else
 			{
 				emit(TKN_LT);
@@ -269,6 +286,12 @@ token_t* lex(char* source)
 				emit(TKN_GT_EQ);
 				continue;
 			}
+			else if(peek() == '>')
+			{
+				next();
+				emit(TKN_GT_GT);
+				continue;
+			}
 			else
 			{
 				emit(TKN_GT);
@@ -276,7 +299,6 @@ token_t* lex(char* source)
 			}
 		} break;
 		}
-
 
 		// If we reach this point of the code, then the given character has not been
 		// processed anywhere above, so we assume that it is an unknown character and

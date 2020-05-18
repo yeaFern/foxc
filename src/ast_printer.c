@@ -43,6 +43,11 @@ static void print_expr(expr_t* expr)
 		case BINARY_LOGICAL_AND: { fprintf(state.handle, "&&"); break; }
 		case BINARY_LOGICAL_OR:  { fprintf(state.handle, "||"); break; }
 		case BINARY_MODULO:      { fprintf(state.handle, "%%"); break; }
+		case BINARY_BITWISE_AND: { fprintf(state.handle, "&" ); break; }
+		case BINARY_BITWISE_OR:  { fprintf(state.handle, "|" ); break; }
+		case BINARY_BITWISE_XOR: { fprintf(state.handle, "^" ); break; }
+		case BINARY_SHIFT_LEFT:  { fprintf(state.handle, "<<"); break; }
+		case BINARY_SHIFT_RIGHT: { fprintf(state.handle, ">>"); break; }
 		default: UNHANDLED_CASE();
 		}
 

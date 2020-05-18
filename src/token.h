@@ -22,15 +22,20 @@ typedef enum
 	TKN_PLUS,
 	TKN_ASTERIX,
 	TKN_SLASH,
+	TKN_AMP,
 	TKN_AMP_AMP,
-	TKN_OR,
+	TKN_PIPE,
+	TKN_PIPE_PIPE,
 	TKN_EQ_EQ,
 	TKN_NOT_EQ,
 	TKN_LT,
+	TKN_LT_LT,
 	TKN_LT_EQ,
 	TKN_GT,
+	TKN_GT_GT,
 	TKN_GT_EQ,
 	TKN_MODULO,
+	TKN_CARET,
 	TKN_EOF
 } token_type_t;
 
@@ -51,14 +56,20 @@ static char* token_type_names[] =
 	"plus",
 	"asterix",
 	"slash",
+	"ampersand",
 	"dbl-amp",
-	"or",
+	"pipe",
+	"dbl-pipe",
 	"dbl-equals",
 	"not-equals",
 	"less",
+	"dbl-less",
 	"less-eq",
 	"greater",
+	"dbl-greater",
 	"greater-eq",
+	"percent",
+	"caret",
 	"eof"
 };
 

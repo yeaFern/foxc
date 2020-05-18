@@ -176,6 +176,41 @@ static void generate_binary_expr(expr_t* expr)
 		fprintf(state.handle, "\tidivl %%ebx\n");
 		fprintf(state.handle, "\tmovl %%edx, %%eax\n");
 	} break;
+	case BINARY_BITWISE_AND: {
+		generate_expr(expr->binary_lhs);
+		fprintf(state.handle, "\tpush %%rax\n");
+		generate_expr(expr->binary_rhs);
+		fprintf(state.handle, "\tpop %%rcx\n");
+		fprintf(state.handle, "\tand %%ecx, %%eax\n");
+	} break;
+	case BINARY_BITWISE_OR: {
+		generate_expr(expr->binary_lhs);
+		fprintf(state.handle, "\tpush %%rax\n");
+		generate_expr(expr->binary_rhs);
+		fprintf(state.handle, "\tpop %%rcx\n");
+		fprintf(state.handle, "\tor %%ecx, %%eax\n");
+	} break;
+	case BINARY_BITWISE_XOR: {
+		generate_expr(expr->binary_lhs);
+		fprintf(state.handle, "\tpush %%rax\n");
+		generate_expr(expr->binary_rhs);
+		fprintf(state.handle, "\tpop %%rcx\n");
+		fprintf(state.handle, "\txor %%ecx, %%eax\n");
+	} break;
+	case BINARY_SHIFT_LEFT: {
+		generate_expr(expr->binary_rhs);
+		fprintf(state.handle, "\tpush %%rax\n");
+		generate_expr(expr->binary_lhs);
+		fprintf(state.handle, "\tpop %%rcx\n");
+		fprintf(state.handle, "\tsal %%cl, %%eax\n");
+	} break;
+	case BINARY_SHIFT_RIGHT: {
+		generate_expr(expr->binary_rhs);
+		fprintf(state.handle, "\tpush %%rax\n");
+		generate_expr(expr->binary_lhs);
+		fprintf(state.handle, "\tpop %%rcx\n");
+		fprintf(state.handle, "\tsar %%cl, %%eax\n");
+	} break;
 	default: {
 		UNHANDLED_CASE();
 	} break;
