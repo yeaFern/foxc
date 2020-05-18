@@ -38,6 +38,11 @@ static bool match(token_type_t type)
 	return peek().type == type;
 }
 
+static void prev()
+{
+	state.ptr--;
+}
+
 // Returns the next token in the stream if that token matches the specified
 // type, throws an error if the types do not match.
 static token_t expect(token_type_t type)
@@ -76,6 +81,7 @@ static decl_t* new_decl(decl_type_t type)
 {
 	decl_t* decl = calloc(1, sizeof(decl_t));
 	decl->type = type;
+	decl->stmts = NULL;
 	return decl;
 }
 
@@ -97,6 +103,11 @@ static expr_t* parse_expr3();
 static expr_t* parse_expr4();
 static expr_t* parse_expr5();
 static expr_t* parse_expr6();
+static expr_t* parse_expr7();
+static expr_t* parse_expr8();
+static expr_t* parse_expr9();
+static expr_t* parse_expr10();
+static expr_t* parse_expr11();
 
 // Parses an expression from the input stream.
 // <"!" | "~" | "-"> <expr> | "(" <expr> ")" | integer
@@ -139,8 +150,15 @@ static expr_t* parse_expr0()
 	{
 		// Recurse back to the bottom, parsing an new expression from scratch.
 		expect(TKN_L_PAREN);
-		expr_t* expr = parse_expr6();
+		expr_t* expr = parse_expr11();
 		expect(TKN_R_PAREN);
+		return expr;
+	}
+	else if(match(TKN_IDENT))
+	{
+		token_t t = expect(TKN_IDENT);
+		expr_t* expr = new_expr(EXPR_VAR);
+		expr->var_name = t.val_string;
 		return expr;
 	}
 	else
@@ -405,23 +423,78 @@ static expr_t* parse_expr10()
 	return lhs;
 }
 
+// expr11 = (name "=" <expr11>) | <expr10>
+static expr_t* parse_expr11()
+{
+	if(match(TKN_IDENT))
+	{
+		token_t name = expect(TKN_IDENT);
+		if(match(TKN_EQ))
+		{
+			expect(TKN_EQ);
+			expr_t* stmt = new_expr(EXPR_ASSIGNMENT);
+			stmt->assign_name = name.val_string;
+			stmt->assign_rhs = parse_expr11();
+			return stmt;
+		}
+		else
+		{
+			// If we don't get an '=' after the identifier, revert back to before
+			// the identifier and continue to parse and expression.
+			prev();
+		}
+	}
+	return parse_expr10();
+}
+
 // Parses a statement from the input stream.
-// stmt = "return" <expr10> ";"
+// stmt = "return" <expr11> ";"
 static stmt_t* parse_statement()
 {
-	expect(TKN_RETURN);
-	expr_t* expr = parse_expr10();
-	expect(TKN_SEMICOLON);
+	if(match(TKN_RETURN))
+	{
+		expect(TKN_RETURN);
+		expr_t* expr = parse_expr11();
+		expect(TKN_SEMICOLON);
+		stmt_t* stmt = new_stmt(STMT_RETURN);
+		stmt->return_expr = expr;
+		return stmt;
+	}
+	else if(match(TKN_IDENT))
+	{
+		token_t t = peek();
+		if(t.val_string == _("int"))
+		{
+			// We got a type name, therefore we are parsing a declaration.
+			token_t type = expect(TKN_IDENT);
+			token_t name = expect(TKN_IDENT);
 
-	// For now, the only type of statement we support is return statements.
-	// In the future we will support more statements.
-	stmt_t* stmt = new_stmt(STMT_RETURN);
-	stmt->expr = expr;
+			expr_t* initializer = NULL;
+			if(match(TKN_EQ))
+			{
+				expect(TKN_EQ);
+				initializer = parse_expr11();
+			}
+			expect(TKN_SEMICOLON);
+
+			stmt_t* stmt = new_stmt(STMT_DECLARE);
+			stmt->declare_name = name.val_string;
+			stmt->declare_initializer = initializer;
+			return stmt;
+		}
+	}
+
+	// If we didn't match any valid statement, then we are parsing a standalone
+	// expression.
+	expr_t* expr = parse_expr11();
+	expect(TKN_SEMICOLON);
+	stmt_t* stmt = new_stmt(STMT_EXPR);
+	stmt->standalone_expr = expr;
 	return stmt;
 }
 
 // Parses a declaration from the input stream.
-// decl = "int" identifier "(" ")" "{" <stmt> "}"
+// decl = "int" identifier "(" ")" "{" { <stmt> } "}"
 static decl_t* parse_declaration()
 {
 	token_t ret = expect(TKN_IDENT);
@@ -436,7 +509,12 @@ static decl_t* parse_declaration()
 	expect(TKN_R_PAREN);
 	expect(TKN_L_CURLY);
 
-	stmt_t* stmt = parse_statement();
+	stmt_t** stmts = NULL;
+	while(!match(TKN_R_CURLY))
+	{
+		stmt_t* stmt = parse_statement();
+        sb_push(stmts, stmt);
+	}
 
 	expect(TKN_R_CURLY);
 
@@ -444,7 +522,7 @@ static decl_t* parse_declaration()
 	// In the future we will support other types of declarations.
 	decl_t* decl = new_decl(DECL_FUNC);
 	decl->name = name.val_string;
-	decl->stmt = stmt;
+	decl->stmts = stmts;
 
 	return decl;
 }
@@ -472,10 +550,18 @@ program_t* parse(token_t* tokens)
 	return parse_program();
 }
 
-expr_t* parse_expression(token_t* tokens)
+expr_t* _parse_expression(token_t* tokens)
 {
 	state.tokens = tokens;
 	state.ptr = 0;
 
-	return parse_expr6();
+	return parse_expr11();
+}
+
+stmt_t* _parse_statement(token_t* tokens)
+{
+	state.tokens = tokens;
+	state.ptr = 0;
+
+	return parse_statement();
 }

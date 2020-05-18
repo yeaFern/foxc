@@ -240,6 +240,11 @@ token_t* lex(char* source)
 				emit(TKN_EQ_EQ);
 				continue;
 			}
+			else
+			{
+				emit(TKN_EQ);
+				continue;
+			}
 		} break;
 
 		case '!': {

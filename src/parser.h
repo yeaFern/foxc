@@ -12,7 +12,9 @@ typedef enum
 {
 	EXPR_LITERAL,
 	EXPR_UNARY,
-	EXPR_BINARY
+	EXPR_BINARY,
+	EXPR_ASSIGNMENT,
+	EXPR_VAR
 } expr_type_t;
 
 typedef enum
@@ -67,12 +69,23 @@ typedef struct expr_t
 			struct expr_t* binary_lhs;
 			struct expr_t* binary_rhs;
 		};
+		struct
+		{ // EXPR_ASSIGNMENT
+			str_t assign_name;
+			struct expr_t* assign_rhs;
+		};
+		struct
+		{  // EXPR_VAR
+			str_t var_name;
+		};
 	};
 } expr_t;
 
 typedef enum
 {
-	STMT_RETURN
+	STMT_EXPR,
+	STMT_RETURN,
+	STMT_DECLARE
 } stmt_type_t;
 
 typedef struct
@@ -82,8 +95,17 @@ typedef struct
 	union
 	{
 		struct
+		{ // STMT_EXPR
+			expr_t* standalone_expr;
+		};
+		struct
 		{ // STMT_RETURN
-			expr_t* expr;
+			expr_t* return_expr;
+		};
+		struct
+		{ // STMT_DECLARE
+			str_t declare_name;
+			expr_t* declare_initializer;
 		};
 	};
 } stmt_t;
@@ -102,7 +124,7 @@ typedef struct
 		struct
 		{ // DECL_FUNC
 			str_t name;
-			stmt_t* stmt;
+			stmt_t** stmts;
 		};
 	};
 } decl_t;
@@ -118,6 +140,9 @@ typedef struct
 program_t* parse(token_t* tokens);
 
 // Parses a single expression from given token list.
-expr_t* parse_expression(token_t* tokens);
+expr_t* _parse_expression(token_t* tokens);
+
+// Parses a single statement from given token list.
+stmt_t* _parse_statement(token_t* tokens);
 
 #endif

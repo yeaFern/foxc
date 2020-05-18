@@ -55,6 +55,14 @@ static void print_expr(expr_t* expr)
 		print_expr(expr->binary_rhs);
 		fprintf(state.handle, ")");
 	} break;
+	case EXPR_ASSIGNMENT: {
+		fprintf(state.handle, "(%s = ", expr->assign_name);
+		print_expr(expr->assign_rhs);
+		fprintf(state.handle, ")");
+	} break;
+	case EXPR_VAR: {
+		fprintf(state.handle, "%s", expr->var_name);
+	} break;
 	default: {
 		UNHANDLED_CASE();
 	} break;
@@ -65,9 +73,21 @@ static void print_stmt(stmt_t* stmt)
 {
 	switch(stmt->type)
 	{
+	case STMT_EXPR: {
+		print_expr(stmt->standalone_expr);
+	} break;
 	case STMT_RETURN: {
 		fprintf(state.handle, "return ");
-		print_expr(stmt->expr);
+		print_expr(stmt->return_expr);
+		fprintf(state.handle, ";\n");
+	} break;
+	case STMT_DECLARE: {
+		fprintf(state.handle, "int %s", stmt->declare_name);
+		if(stmt->declare_initializer)
+		{
+			fprintf(state.handle, " = ");
+			print_expr(stmt->declare_initializer);
+		}
 		fprintf(state.handle, ";\n");
 	} break;
 	default: {
@@ -82,7 +102,10 @@ static void print_decl(decl_t* decl)
 	{
 	case DECL_FUNC: {
 		fprintf(state.handle, "int %s () {\n", decl->name);
-		print_stmt(decl->stmt);
+		for(int i = 0; i < sb_count(decl->stmts); i++)
+		{
+			print_stmt(decl->stmts[i]);
+		}
 		fprintf(state.handle, "}\n");
 	} break;
 	default: {
@@ -109,5 +132,13 @@ void print_expression(FILE* handle, expr_t* expression)
 	state.handle = handle;
 
 	print_expr(expression);
+	fprintf(state.handle, "\n");
+}
+
+void print_statement(FILE* handle, stmt_t* statement)
+{
+	state.handle = handle;
+
+	print_stmt(statement);
 	fprintf(state.handle, "\n");
 }

@@ -241,7 +241,7 @@ static void generate_stmt(stmt_t* stmt)
 	switch(stmt->type)
 	{
 	case STMT_RETURN: {
-		generate_expr(stmt->expr);
+		generate_expr(stmt->return_expr);
 		fprintf(state.handle, "\tret\n");
 	} break;
 	default: {
@@ -257,7 +257,10 @@ static void generate_decl(decl_t* decl)
 	case DECL_FUNC: {
 		fprintf(state.handle, ".globl %s\n", decl->name);
 		fprintf(state.handle, "%s:\n", decl->name);
-		generate_stmt(decl->stmt);
+		for(int i = 0; i < sb_count(decl->stmts); i++)
+		{
+			generate_stmt(decl->stmts[i]);
+		}
 	} break;
 	default: {
 		UNHANDLED_CASE();

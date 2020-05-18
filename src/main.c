@@ -96,9 +96,9 @@ void run_repl()
         print_tokens(tokens);
         free(b.buffer);
 
-		expr_t* expression = parse_expression(tokens);
+		stmt_t* statement = _parse_statement(tokens);
 
-		print_expression(stdout, expression);
+		print_statement(stdout, statement);
     }
 }
 
