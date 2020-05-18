@@ -115,7 +115,7 @@ int main(int argc, char** argv)
 		if(source == NULL)
 		{
 			printf("unable to open file '%s'\n", argv[1]);
-			return;
+			return 1;
 		}
 
 		token_t* tokens = lex(source);
