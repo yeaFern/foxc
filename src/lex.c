@@ -206,7 +206,7 @@ token_t* lex(char* source)
 			if(peek() == '&')
 			{
 				next();
-				emit(TKN_AND);
+				emit(TKN_AMP_AMP);
 				continue;
 			}
 		} break;

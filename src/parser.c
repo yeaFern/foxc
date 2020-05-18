@@ -264,14 +264,14 @@ static expr_t* parse_expr4()
 static expr_t* parse_expr5()
 {
 	expr_t* lhs = parse_expr4();
-	while(match(TKN_AND))
+	while(match(TKN_AMP_AMP))
 	{
 		token_t t = next();
 		expr_t* rhs = parse_expr4();
 
 		// Deduce the operator from the token.
 		binary_operator_t operator = BINARY_UNKNOWN;
-		if(t.type == TKN_AND) { operator = BINARY_LOGICAL_AND; }
+		if(t.type == TKN_AMP_AMP) { operator = BINARY_LOGICAL_AND; }
 
 		if(operator == BINARY_UNKNOWN) { UNHANDLED_CASE(); }
 
