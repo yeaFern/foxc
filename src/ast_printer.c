@@ -75,6 +75,7 @@ static void print_stmt(stmt_t* stmt)
 	{
 	case STMT_EXPR: {
 		print_expr(stmt->standalone_expr);
+		fprintf(state.handle, ";\n");
 	} break;
 	case STMT_RETURN: {
 		fprintf(state.handle, "return ");

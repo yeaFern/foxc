@@ -1,9 +1,18 @@
 #include "generator.h"
 
+typedef struct
+{
+	str_t name;
+	int stack_offset;
+} var_map_entry_t;
+
 static struct
 {
 	FILE* handle;
 	int label_counter;
+
+	var_map_entry_t* var_map;
+	int stack_index;
 } state;
 
 static char* new_label()
@@ -230,6 +239,34 @@ static void generate_expr(expr_t* expr)
 	case EXPR_BINARY: {
 		generate_binary_expr(expr);
 	} break;
+	case EXPR_VAR: {
+		int offset = 0;
+		for(int i = 0; i < sb_count(state.var_map); i++)
+		{
+			if(state.var_map[i].name == expr->var_name)
+			{
+				offset = state.var_map[i].stack_offset;
+				break;
+			}
+		}
+
+		fprintf(state.handle, "\tmovl %d(%%rbp), %%eax\n", offset);
+	} break;
+	case EXPR_ASSIGNMENT: {
+		generate_expr(expr->assign_rhs);
+
+		int offset = 0;
+		for(int i = 0; i < sb_count(state.var_map); i++)
+		{
+			if(state.var_map[i].name == expr->var_name)
+			{
+				offset = state.var_map[i].stack_offset;
+				break;
+			}
+		}
+
+		fprintf(state.handle, "\tmovl %%eax, %d(%%rbp)\n", offset);
+	} break;
 	default: {
 		UNHANDLED_CASE();
 	} break;
@@ -242,7 +279,30 @@ static void generate_stmt(stmt_t* stmt)
 	{
 	case STMT_RETURN: {
 		generate_expr(stmt->return_expr);
+
+		// Function Epilogue
+		fprintf(state.handle, "\tmov %%rbp, %%rsp\n");
+		fprintf(state.handle, "\tpop %%rbp\n");
 		fprintf(state.handle, "\tret\n");
+	} break;
+	case STMT_EXPR: {
+		generate_expr(stmt->standalone_expr);
+	} break;
+	case STMT_DECLARE: {
+		// if(var_exists(stmt->var_name)) ...
+		if(stmt->declare_initializer)
+		{
+			generate_expr(stmt->declare_initializer);
+		}
+		fprintf(state.handle, "\tpush %%rax # %s\n", stmt->declare_name);
+
+		state.stack_index -= 8; // TODO: calculate size of pushed value automatically
+
+		var_map_entry_t new_var_entry;
+		new_var_entry.name = stmt->declare_name;
+		new_var_entry.stack_offset = state.stack_index;
+
+		sb_push(state.var_map, new_var_entry);
 	} break;
 	default: {
 		UNHANDLED_CASE();
@@ -257,10 +317,20 @@ static void generate_decl(decl_t* decl)
 	case DECL_FUNC: {
 		fprintf(state.handle, ".globl %s\n", decl->name);
 		fprintf(state.handle, "%s:\n", decl->name);
+		
+		// Function Prologue
+		fprintf(state.handle, "\tpush %%rbp\n");
+		fprintf(state.handle, "\tmov %%rsp, %%rbp\n");
+		
 		for(int i = 0; i < sb_count(decl->stmts); i++)
 		{
 			generate_stmt(decl->stmts[i]);
 		}
+		
+		// Function Epilogue
+		fprintf(state.handle, "\tmov %%rbp, %%rsp\n");
+		fprintf(state.handle, "\tpop %%rbp\n");
+		fprintf(state.handle, "\tret\n");
 	} break;
 	default: {
 		UNHANDLED_CASE();
@@ -277,6 +347,8 @@ void generate(FILE* handle, program_t* program)
 {
 	state.handle = handle;
 	state.label_counter = 0;
+	state.var_map = NULL;
+	state.stack_index = 0;
 
 	generate_program(program);
 }

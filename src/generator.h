@@ -4,6 +4,7 @@
 #include <stdio.h>
 
 #include "parser.h"
+#include "buf.h"
 
 void generate(FILE* handle, program_t* program);
 
